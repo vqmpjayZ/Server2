@@ -26,7 +26,7 @@ function generateKey() {
 
 app.get("/getkey/:userid", (req, res) => {
     const secret = req.query.token;
-    if (secret !== "MY_SECRET_TOKEN_123") {
+    if (secret !== "VADRIFTS_keyguardian%vdh4das34f4hfj23s") {
         return res.status(403).json({ error: "Unauthorized" });
     }
 
