@@ -25,6 +25,11 @@ function generateKey() {
 }
 
 app.get("/getkey/:userid", (req, res) => {
+    const secret = req.query.token;
+    if (secret !== "MY_SECRET_TOKEN_123") {
+        return res.status(403).json({ error: "Unauthorized" });
+    }
+
     const userId = req.params.userid;
     const keys = loadKeys();
 
