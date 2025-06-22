@@ -1,0 +1,24 @@
+<script>
+async function getKey() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (!token) {
+            document.getElementById('keyDisplay').textContent = 'Access denied - invalid token';
+            return;
+        }
+        
+        const response = await fetch(`/getkey?token=${token}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            document.getElementById('keyDisplay').textContent = data.error;
+        } else {
+            document.getElementById('keyDisplay').textContent = data.key;
+        }
+    } catch (error) {
+        document.getElementById('keyDisplay').textContent = 'Error loading key';
+    }
+}
+</script>
