@@ -88,7 +88,7 @@ app.get('/getkey', (req, res) => {
 function generateKey(hwid) {
     const now = new Date();
     const week = getWeekNumber(now) + '-' + now.getFullYear();
-    const secret = 'your_secret_salt_change_this';
+    const secret = 'vadrifts_';
     
     return crypto.createHash('md5')
         .update(hwid + week + secret)
