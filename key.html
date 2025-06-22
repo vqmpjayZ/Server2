@@ -1,24 +1,82 @@
-<script>
-async function getKey() {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        
-        if (!token) {
-            document.getElementById('keyDisplay').textContent = 'Access denied - invalid token';
-            return;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Key</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #1a1a1a; 
+            color: white; 
+            text-align: center; 
+            padding: 50px; 
+        }
+        .key-container { 
+            background: #2d2d2d; 
+            padding: 30px; 
+            border-radius: 10px; 
+            max-width: 400px; 
+            margin: 0 auto; 
+        }
+        .key { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #4CAF50; 
+            padding: 20px; 
+            background: #333; 
+            border-radius: 5px; 
+            margin: 20px 0; 
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="key-container">
+        <h1>Your Script Key</h1>
+        <p>Here's your personal key:</p>
+        <div class="key" id="keyDisplay">Loading...</div>
+        <button onclick="copyKey()">Copy Key</button>
+        <p><small>This key expires at the end of the week</small></p>
+    </div>
+
+    <script>
+        async function getKey() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                
+                if (!token) {
+                    document.getElementById('keyDisplay').textContent = 'Access denied - invalid token';
+                    return;
+                }
+                
+                const response = await fetch(`/getkey?token=${token}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('keyDisplay').textContent = data.error;
+                } else {
+                    document.getElementById('keyDisplay').textContent = data.key;
+                }
+            } catch (error) {
+                document.getElementById('keyDisplay').textContent = 'Error loading key';
+            }
         }
         
-        const response = await fetch(`/getkey?token=${token}`);
-        const data = await response.json();
-        
-        if (data.error) {
-            document.getElementById('keyDisplay').textContent = data.error;
-        } else {
-            document.getElementById('keyDisplay').textContent = data.key;
+        function copyKey() {
+            const key = document.getElementById('keyDisplay').textContent;
+            navigator.clipboard.writeText(key);
+            alert('Key copied to clipboard!');
         }
-    } catch (error) {
-        document.getElementById('keyDisplay').textContent = 'Error loading key';
-    }
-}
-</script>
+        
+        getKey();
+    </script>
+</body>
+</html>
