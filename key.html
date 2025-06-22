@@ -35,6 +35,11 @@
             cursor: pointer;
             font-size: 16px;
         }
+        .debug {
+            font-size: 12px;
+            color: #888;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -44,9 +49,19 @@
         <div class="key" id="keyDisplay">Loading...</div>
         <button onclick="copyKey()">Copy Key</button>
         <p><small>This key expires at the end of the week</small></p>
+        <div class="debug" id="debugInfo"></div>
     </div>
 
     <script>
+        function generateHWID() {
+            const data = navigator.userAgent + navigator.language + screen.width + screen.height + navigator.platform;
+            let hash = 0;
+            for (let i = 0; i < data.length; i++) {
+                hash = ((hash * 31) + data.charCodeAt(i)) % 2147483647;
+            }
+            return hash.toString();
+        }
+
         async function getKey() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -64,6 +79,7 @@
                     document.getElementById('keyDisplay').textContent = data.error;
                 } else {
                     document.getElementById('keyDisplay').textContent = data.key;
+                    document.getElementById('debugInfo').textContent = `HWID: ${data.hwid}`;
                 }
             } catch (error) {
                 document.getElementById('keyDisplay').textContent = 'Error loading key';
