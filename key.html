@@ -25,6 +25,7 @@
             background: #333; 
             border-radius: 5px; 
             margin: 20px 0; 
+            word-break: break-all;
         }
         button {
             background: #4CAF50;
@@ -35,63 +36,95 @@
             cursor: pointer;
             font-size: 16px;
         }
+        button:hover {
+            background: #45a049;
+        }
         .debug {
             font-size: 12px;
             color: #888;
-            margin-top: 10px;
+            margin-top: 20px;
+            text-align: left;
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="key-container">
         <h1>Your Script Key</h1>
-        <p>Here's your personal key:</p>
+        <p>Here's your personal weekly key:</p>
         <div class="key" id="keyDisplay">Loading...</div>
         <button onclick="copyKey()">Copy Key</button>
         <p><small>This key expires at the end of the week</small></p>
-        <div class="debug" id="debugInfo"></div>
+        <div class="debug" id="debugInfo">Debug info will appear here...</div>
     </div>
 
     <script>
-        function generateHWID() {
-            const data = navigator.userAgent + navigator.language + screen.width + screen.height + navigator.platform;
-            let hash = 0;
-            for (let i = 0; i < data.length; i++) {
-                hash = ((hash * 31) + data.charCodeAt(i)) % 2147483647;
-            }
-            return hash.toString();
-        }
-
         async function getKey() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const token = urlParams.get('token');
                 
+                console.log("=== KEY.HTML DEBUG ===");
+                console.log("Token from URL:", token);
+                
                 if (!token) {
                     document.getElementById('keyDisplay').textContent = 'Access denied - invalid token';
+                    document.getElementById('debugInfo').textContent = 'Error: No token in URL';
                     return;
                 }
                 
+                console.log("Fetching key with token...");
                 const response = await fetch(`/getkey?token=${token}`);
                 const data = await response.json();
                 
+                console.log("Response data:", data);
+                
                 if (data.error) {
                     document.getElementById('keyDisplay').textContent = data.error;
+                    document.getElementById('debugInfo').textContent = `Error: ${data.error}`;
                 } else {
                     document.getElementById('keyDisplay').textContent = data.key;
-                    document.getElementById('debugInfo').textContent = `HWID: ${data.hwid}`;
+                    document.getElementById('debugInfo').innerHTML = `
+                        <strong>Debug Info:</strong><br>
+                        HWID: ${data.hwid}<br>
+                        Week: ${data.week}<br>
+                        Key: ${data.key}<br>
+                        Expires: ${new Date(data.expires * 1000).toLocaleString()}
+                    `;
                 }
+                
+                console.log("=== END KEY.HTML DEBUG ===");
+                
             } catch (error) {
+                console.error("Error:", error);
                 document.getElementById('keyDisplay').textContent = 'Error loading key';
+                document.getElementById('debugInfo').textContent = `Error: ${error.message}`;
             }
         }
         
         function copyKey() {
             const key = document.getElementById('keyDisplay').textContent;
-            navigator.clipboard.writeText(key);
-            alert('Key copied to clipboard!');
+            if (key && key !== 'Loading...' && !key.includes('Error')) {
+                navigator.clipboard.writeText(key).then(() => {
+                    alert('Key copied to clipboard!');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = key;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Key copied to clipboard!');
+                });
+            } else {
+                alert('No valid key to copy!');
+            }
         }
         
+        // Load key when page loads
         getKey();
     </script>
 </body>
