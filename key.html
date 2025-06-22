@@ -56,26 +56,21 @@
     </div>
 
 <script>
-    function generateHWID() {
-        try {
-            const userAgent = "Roblox/WinInet";
-            const language = "en-US";
-            const screenWidth = window.innerWidth.toString();
-            const screenHeight = window.innerHeight.toString();
-            const fingerprint = userAgent + language + screenWidth + screenHeight;
+function generateHWID() {
+    const userAgent = "Roblox/WinInet";
+    const language = "en-US";
+    const screenWidth = window.innerWidth.toString();
+    const screenHeight = window.innerHeight.toString();
 
-            let hash = 0;
-            for (let i = 0; i < fingerprint.length; i++) {
-                hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
-            }
-            const hwid = hash.toString();
-            console.log("HWID (browser):", hwid);
-            return hwid;
-        } catch (err) {
-            console.error("HWID generation failed:", err);
-            return null;
-        }
+    const fingerprint = userAgent + language + screenWidth + screenHeight;
+
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+        hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
     }
+
+    return hash.toString();
+}
 
     async function getKey() {
         const keyDisplay = document.getElementById('keyDisplay');
