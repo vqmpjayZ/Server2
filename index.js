@@ -50,7 +50,9 @@ app.get('/', (req, res) => {
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
 
-    const hwid = req.query.hwid || generateDefaultHWID();
+    const hwid = req.query.hwid || "default_user";
+    
+    console.log("Generate route - HWID received:", hwid);
     
     tokens[token] = {
         hwid: hwid,
