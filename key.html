@@ -1,69 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Your Personal Key</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f0f0f;
-      color: #f0f0f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    h1 {
-      color: #00ff88;
-    }
-
-    #key {
-      font-size: 1.5rem;
-      margin-top: 20px;
-      background: #1a1a1a;
-      padding: 10px 20px;
-      border: 1px solid #444;
-      border-radius: 8px;
-    }
-
-    .error {
-      color: red;
-    }
-  </style>
+    <title>Your Key</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #1a1a1a; 
+            color: white; 
+            text-align: center; 
+            padding: 50px; 
+        }
+        .key-container { 
+            background: #2d2d2d; 
+            padding: 30px; 
+            border-radius: 10px; 
+            max-width: 400px; 
+            margin: 0 auto; 
+        }
+        .key { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #4CAF50; 
+            padding: 20px; 
+            background: #333; 
+            border-radius: 5px; 
+            margin: 20px 0; 
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .debug {
+            font-size: 12px;
+            color: #888;
+            margin-top: 20px;
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Your Personal Key</h1>
-  <div id="key">Loading...</div>
+    <div class="key-container">
+        <h1>Your Script Key</h1>
+        <p>Here's your personal key:</p>
+        <div class="key" id="keyDisplay">Loading...</div>
+        <button onclick="copyKey()">Copy Key</button>
+        <p><small>This key expires at the end of the week</small></p>
+        <div class="debug" id="debugInfo"></div>
+    </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const hwid = urlParams.get("hwid");
+    <script>
+function generateHWID() {
+    const userAgent = "Roblox/WinInet";
+    const language = "en-US";
+    const screenWidth = window.innerWidth.toString();
+    const screenHeight = window.innerHeight.toString();
+    const fingerprint = userAgent + language + screenWidth + screenHeight;
 
-    const keyDisplay = document.getElementById("key");
-
-    if (!hwid) {
-      keyDisplay.textContent = "Error: HWID is missing in the URL.";
-      keyDisplay.classList.add("error");
-    } else {
-      fetch(`/generate?hwid=${hwid}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.key) {
-            keyDisplay.textContent = data.key;
-          } else {
-            keyDisplay.textContent = "Failed to generate key.";
-            keyDisplay.classList.add("error");
-          }
-        })
-        .catch(error => {
-          keyDisplay.textContent = "Server error while fetching key.";
-          keyDisplay.classList.add("error");
-        });
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+        hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
     }
-  </script>
+    return hash.toString();
+}
+        async function getKey() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                
+                if (!token) {
+                    document.getElementById('keyDisplay').textContent = 'Access denied - invalid token';
+                    return;
+                }
+                
+                const hwid = generateHWID();
+                console.log("Sending HWID to server:", hwid);
+                
+                const response = await fetch(/getkey?token=${token}&hwid=${hwid});
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('keyDisplay').textContent = data.error;
+                    document.getElementById('debugInfo').textContent = Error: ${data.error};
+                } else {
+                    document.getElementById('keyDisplay').textContent = data.key;
+                    document.getElementById('debugInfo').innerHTML = 
+                        <strong>Debug:</strong><br>
+                        Browser HWID: ${hwid}<br>
+                        Server HWID: ${data.hwid}<br>
+                        Key: ${data.key}<br>
+                        Week: ${data.week}
+                    ;
+                }
+            } catch (error) {
+                document.getElementById('keyDisplay').textContent = 'Error loading key';
+                document.getElementById('debugInfo').textContent = Error: ${error.message};
+            }
+        }
+        
+        function copyKey() {
+            const key = document.getElementById('keyDisplay').textContent;
+            if (key && !key.includes('Error') && key !== 'Loading...') {
+                navigator.clipboard.writeText(key);
+                alert('Key copied to clipboard!');
+            }
+        }
+        
+        getKey();
+    </script>
 </body>
 </html>
