@@ -47,7 +47,7 @@ app.get('/generate', (req, res) => {
         expires: Date.now() + 300000 // 5 minutes
     };
     
-    res.redirect(/key.html?token=${token});
+    res.redirect(`/key.html?token=${token}`);
 });
 
 // Get key with HWID from frontend
@@ -104,5 +104,5 @@ function getNextSunday() {
 }
 
 app.listen(port, () => {
-    console.log(Server running on port ${port});
+    console.log(`Server running on port ${port}`);
 });
