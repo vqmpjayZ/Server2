@@ -80,7 +80,7 @@ function generateKey(hwid) {
     const week = getCurrentWeek();
     const secret = "vadrifts_";
     const combined = hwid + week + secret;
-    
+
     return crypto.createHash('md5')
         .update(combined)
         .digest('hex')
