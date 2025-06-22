@@ -55,64 +55,85 @@
         <div class="debug" id="debugInfo"></div>
     </div>
 
-    <script>
-function generateHWID() {
-    const userAgent = "Roblox/WinInet";
-    const language = "en-US";
-    const screenWidth = window.innerWidth.toString();
-    const screenHeight = window.innerHeight.toString();
-    const fingerprint = userAgent + language + screenWidth + screenHeight;
+<script>
+    function generateHWID() {
+        try {
+            const userAgent = "Roblox/WinInet";
+            const language = "en-US";
+            const screenWidth = window.innerWidth.toString();
+            const screenHeight = window.innerHeight.toString();
+            const fingerprint = userAgent + language + screenWidth + screenHeight;
 
-    let hash = 0;
-    for (let i = 0; i < fingerprint.length; i++) {
-        hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
+            }
+            const hwid = hash.toString();
+            console.log("HWID (browser):", hwid);
+            return hwid;
+        } catch (err) {
+            console.error("HWID generation failed:", err);
+            return null;
+        }
     }
-    return hash.toString();
-}
-        async function getKey() {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const token = urlParams.get('token');
-                
-                if (!token) {
-                    document.getElementById('keyDisplay').textContent = 'Access denied - invalid token';
-                    return;
-                }
-                
-                const hwid = generateHWID();
-                console.log("Sending HWID to server:", hwid);
-                
-                const response = await fetch(/getkey?token=${token}&hwid=${hwid});
-                const data = await response.json();
-                
-                if (data.error) {
-                    document.getElementById('keyDisplay').textContent = data.error;
-                    document.getElementById('debugInfo').textContent = Error: ${data.error};
-                } else {
-                    document.getElementById('keyDisplay').textContent = data.key;
-                    document.getElementById('debugInfo').innerHTML = 
-                        <strong>Debug:</strong><br>
-                        Browser HWID: ${hwid}<br>
-                        Server HWID: ${data.hwid}<br>
-                        Key: ${data.key}<br>
-                        Week: ${data.week}
-                    ;
-                }
-            } catch (error) {
-                document.getElementById('keyDisplay').textContent = 'Error loading key';
-                document.getElementById('debugInfo').textContent = Error: ${error.message};
+
+    async function getKey() {
+        const keyDisplay = document.getElementById('keyDisplay');
+        const debugInfo = document.getElementById('debugInfo');
+
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (!token) {
+                keyDisplay.textContent = '❌ Invalid or missing token';
+                debugInfo.textContent = 'Missing token in URL';
+                return;
             }
-        }
-        
-        function copyKey() {
-            const key = document.getElementById('keyDisplay').textContent;
-            if (key && !key.includes('Error') && key !== 'Loading...') {
-                navigator.clipboard.writeText(key);
-                alert('Key copied to clipboard!');
+
+            const hwid = generateHWID();
+            if (!hwid) {
+                keyDisplay.textContent = '❌ Failed to generate HWID';
+                debugInfo.textContent = 'HWID generation returned null';
+                return;
             }
+
+            const url = `/getkey?token=${token}&hwid=${hwid}`;
+            console.log("Calling backend:", url);
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.error) {
+                keyDisplay.textContent = `❌ ${data.error}`;
+                debugInfo.innerHTML = `<strong>Error:</strong> ${data.error}<br><br>Token: ${token}<br>HWID: ${hwid}`;
+            } else {
+                keyDisplay.textContent = data.key;
+                debugInfo.innerHTML = `
+                    <strong>Debug Info:</strong><br>
+                    ✅ Key: ${data.key}<br>
+                    🆔 HWID (client): ${hwid}<br>
+                    📡 HWID (server): ${data.hwid}<br>
+                    📅 Week: ${data.week}<br>
+                    ⏰ Expires: ${new Date(data.expires * 1000).toLocaleString()}
+                `;
+            }
+
+        } catch (err) {
+            keyDisplay.textContent = '❌ Failed to load key';
+            debugInfo.textContent = `Error: ${err.message}`;
+            console.error("Fetch failed:", err);
         }
-        
-        getKey();
-    </script>
+    }
+
+    function copyKey() {
+        const key = document.getElementById('keyDisplay').textContent;
+        if (key && !key.includes('Error') && key !== 'Loading...') {
+            navigator.clipboard.writeText(key);
+            alert('✅ Key copied to clipboard!');
+        }
+    }
+
+    getKey();
+</script>
 </body>
 </html>
