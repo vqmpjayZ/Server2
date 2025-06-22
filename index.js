@@ -20,6 +20,15 @@ app.use((req, res, next) => {
 
 app.use(express.static('.'));
 
+function generateHWID(userAgent, language, screenWidth, screenHeight, platform) {
+    const data = userAgent + language + screenWidth + screenHeight + platform;
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+        hash = ((hash * 31) + data.charCodeAt(i)) % 2147483647;
+    }
+    return hash.toString();
+}
+
 app.get('/', (req, res) => {
     const hwid = req.query.hwid;
     
@@ -41,7 +50,10 @@ app.get('/', (req, res) => {
 
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
-    const hwid = req.query.hwid || 'default';
+
+    const userAgent = req.headers['user-agent'] || '';
+    const language = req.headers['accept-language'] || '';
+    const hwid = generateHWID(userAgent, language, '1920', '1080', 'Web');
     
     tokens[token] = {
         hwid: hwid,
@@ -68,6 +80,7 @@ app.get('/getkey', (req, res) => {
     
     res.json({ 
         key: key,
+        hwid: tokenData.hwid,
         expires: Math.floor(nextSunday.getTime() / 1000)
     });
 });
@@ -75,7 +88,7 @@ app.get('/getkey', (req, res) => {
 function generateKey(hwid) {
     const now = new Date();
     const week = getWeekNumber(now) + '-' + now.getFullYear();
-    const secret = 'vadrifts_';
+    const secret = 'your_secret_salt_change_this';
     
     return crypto.createHash('md5')
         .update(hwid + week + secret)
