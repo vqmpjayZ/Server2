@@ -20,11 +20,11 @@ app.use((req, res, next) => {
 
 app.use(express.static('.'));
 
-function generateHWID(userAgent, language, screenWidth, screenHeight, platform) {
-    const data = userAgent + language + screenWidth + screenHeight + platform;
+function generateRobloxHWID() {
+    const data = "roblox-client-identifier";
     let hash = 0;
     for (let i = 0; i < data.length; i++) {
-        hash = ((hash * 31) + data.charCodeAt(i)) % 2147483647;
+        hash = (hash * 31 + data.charCodeAt(i)) % 2147483647;
     }
     return hash.toString();
 }
@@ -37,23 +37,20 @@ app.get('/', (req, res) => {
     }
     
     const key = generateKey(hwid);
-    const nextSunday = new Date();
-    nextSunday.setDate(nextSunday.getDate() + (7 - nextSunday.getDay()));
-    nextSunday.setHours(23, 59, 59, 999);
+    const nextSunday = getNextSunday();
     
     res.json({
         key: key,
         expires: Math.floor(nextSunday.getTime() / 1000),
-        week: getWeekNumber(new Date()) + '-' + new Date().getFullYear()
+        week: getCurrentWeek(),
+        hwid: hwid
     });
 });
 
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
 
-    const userAgent = req.headers['user-agent'] || '';
-    const language = req.headers['accept-language'] || '';
-    const hwid = generateHWID(userAgent, language, '1920', '1080', 'Web');
+    const hwid = req.query.hwid || generateDefaultHWID();
     
     tokens[token] = {
         hwid: hwid,
@@ -62,6 +59,10 @@ app.get('/generate', (req, res) => {
     
     res.redirect(`/key.html?token=${token}`);
 });
+
+function generateDefaultHWID() {
+    return "default_user";
+}
 
 app.get('/getkey', (req, res) => {
     const token = req.query.token;
@@ -74,21 +75,17 @@ app.get('/getkey', (req, res) => {
     const key = generateKey(tokenData.hwid);
     delete tokens[token];
     
-    const nextSunday = new Date();
-    nextSunday.setDate(nextSunday.getDate() + (7 - nextSunday.getDay()));
-    nextSunday.setHours(23, 59, 59, 999);
-    
     res.json({ 
         key: key,
         hwid: tokenData.hwid,
-        expires: Math.floor(nextSunday.getTime() / 1000)
+        expires: Math.floor(getNextSunday().getTime() / 1000),
+        week: getCurrentWeek()
     });
 });
 
 function generateKey(hwid) {
-    const now = new Date();
-    const week = getWeekNumber(now) + '-' + now.getFullYear();
-    const secret = 'vadrifts_';
+    const week = getCurrentWeek();
+    const secret = "vadrifts_";
     
     return crypto.createHash('md5')
         .update(hwid + week + secret)
@@ -96,10 +93,20 @@ function generateKey(hwid) {
         .substring(0, 12);
 }
 
-function getWeekNumber(date) {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+function getCurrentWeek() {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
+    const week = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    return week + '-' + now.getFullYear();
+}
+
+function getNextSunday() {
+    const now = new Date();
+    const nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + (7 - now.getDay()));
+    nextSunday.setHours(23, 59, 59, 999);
+    return nextSunday;
 }
 
 app.listen(port, () => {
