@@ -57,12 +57,8 @@
 
 <script>
 function generateHWID() {
-    const fingerprint = "Roblox/WinIneten-US19201017";
-    let hash = 0;
-    for (let i = 0; i < fingerprint.length; i++) {
-        hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
-    }
-    return hash.toString();
+    const params = new URLSearchParams(window.location.search);
+    return params.get("hwid") || "0";
 }
     async function getKey() {
         const keyDisplay = document.getElementById('keyDisplay');
