@@ -60,8 +60,8 @@ function generateHWID() {
     const userAgent = "Roblox/WinInet";
     const language = "en-US";
 
-    const screenWidth = screen.width;
-    const screenHeight = screen.height;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
 
     const fingerprint = userAgent + language + screenWidth + screenHeight;
 
