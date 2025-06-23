@@ -20,7 +20,6 @@ app.use((req, res, next) => {
 
 app.use(express.static('.'));
 
-// Direct API route
 app.get('/', (req, res) => {
     const hwid = req.query.hwid;
     
@@ -38,22 +37,19 @@ app.get('/', (req, res) => {
     });
 });
 
-// Workink destination - NO HWID in URL (Workink doesn't know it)
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
-    
-    // Store token without HWID - we'll get it later
+
     tokens[token] = {
-        expires: Date.now() + 300000 // 5 minutes
+        expires: Date.now() + 300000
     };
     
     res.redirect(`/key.html?token=${token}`);
 });
 
-// Get key with HWID from frontend
 app.get('/getkey', (req, res) => {
     const token = req.query.token;
-    const hwid = req.query.hwid; // HWID comes from the frontend
+    const hwid = req.query.hwid;
     
     const tokenData = tokens[token];
     
