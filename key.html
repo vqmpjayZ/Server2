@@ -59,18 +59,20 @@
 function generateHWID() {
     const userAgent = "Roblox/WinInet";
     const language = "en-US";
-
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
     const fingerprint = userAgent + language + screenWidth + screenHeight;
+    console.log("Fingerprint used in browser:", fingerprint);
 
     let hash = 0;
     for (let i = 0; i < fingerprint.length; i++) {
         hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
     }
 
-    return hash.toString();
+    const hwid = hash.toString();
+    console.log("Browser HWID:", hwid);
+    return hwid;
 }
 
     async function getKey() {
