@@ -57,14 +57,13 @@
 
 <script>
 function generateHWID() {
-    const fingerprint = "Roblox/WinInet-US19201017";
+    const fingerprint = "Roblox/WinIneten-US19201017";
     let hash = 0;
     for (let i = 0; i < fingerprint.length; i++) {
         hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
     }
     return hash.toString();
 }
-
     async function getKey() {
         const keyDisplay = document.getElementById('keyDisplay');
         const debugInfo = document.getElementById('debugInfo');
