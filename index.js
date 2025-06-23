@@ -77,10 +77,12 @@ function generateKey(hwid) {
     const secret = "vadrifts_";
     const combined = hwid + week + secret;
 
-    return crypto.createHash('md5')
-        .update(combined)
-        .digest('hex')
-        .substring(0, 12);
+    let hash = 0;
+    for (let i = 0; i < combined.length; i++) {
+        hash = ((hash * 31) + combined.charCodeAt(i)) % 2147483647;
+    }
+
+    return hash.toString(16).substring(0, 12);
 }
 
 function getCurrentWeek() {
