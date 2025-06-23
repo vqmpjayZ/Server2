@@ -57,10 +57,20 @@
 
 <script>
 function generateHWID() {
-    const params = new URLSearchParams(window.location.search);
-    const hwid = params.get("hwid");
-    console.log("HWID from URL:", hwid);
-    return hwid || "0";
+    const userAgent = "Roblox/WinInet";
+    const language = "en-US";
+
+    const screenWidth = screen.width;
+    const screenHeight = screen.height;
+
+    const fingerprint = userAgent + language + screenWidth + screenHeight;
+
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+        hash = ((hash * 31) + fingerprint.charCodeAt(i)) % 2147483647;
+    }
+
+    return hash.toString();
 }
 
     async function getKey() {
