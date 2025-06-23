@@ -58,8 +58,11 @@
 <script>
 function generateHWID() {
     const params = new URLSearchParams(window.location.search);
-    return params.get("hwid") || "0";
+    const hwid = params.get("hwid");
+    console.log("HWID from URL:", hwid);
+    return hwid || "0";
 }
+
     async function getKey() {
         const keyDisplay = document.getElementById('keyDisplay');
         const debugInfo = document.getElementById('debugInfo');
