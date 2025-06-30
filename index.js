@@ -10,7 +10,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
+
     if (req.method === 'OPTIONS') {
         res.sendStatus(200);
     } else {
@@ -22,13 +22,13 @@ app.use(express.static('.'));
 
 app.get('/', (req, res) => {
     const hwid = req.query.hwid;
-    
+
     if (!hwid) {
         return res.status(400).json({ error: 'HWID required' });
     }
-    
+
     const key = generateKey(hwid);
-    
+
     res.json({
         key: key,
         expires: Math.floor(getNextSunday().getTime() / 1000),
@@ -39,39 +39,49 @@ app.get('/', (req, res) => {
 
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
-    const hwid = req.query.hwid;
 
     tokens[token] = {
         expires: Date.now() + 300000,
-        hwid: hwid || null
+        hwid: null
     };
 
-    let url = `/key.html?token=${token}`;
-    if (hwid) url += `&hwid=${hwid}`;
+    if (req.query.json === "1") {
+        return res.json({ token: token });
+    }
 
-    res.redirect(url);
+    res.redirect(`/key.html?token=${token}`);
+});
+
+app.get('/sethwid', (req, res) => {
+    const token = req.query.token;
+    const hwid = req.query.hwid;
+
+    if (!token || !hwid || !tokens[token]) {
+        return res.status(400).json({ error: 'Invalid token or hwid' });
+    }
+
+    tokens[token].hwid = hwid;
+    res.json({ success: true });
 });
 
 app.get('/getkey', (req, res) => {
     const token = req.query.token;
-    const hwid = req.query.hwid;
-    
     const tokenData = tokens[token];
-    
-    if (!tokenData || Date.now() > tokenData.expires) {
+
+    if (!token || !tokenData || Date.now() > tokenData.expires) {
         return res.status(400).json({ error: 'Invalid or expired token' });
     }
-    
-    if (!hwid) {
-        return res.status(400).json({ error: 'HWID required' });
+
+    if (!tokenData.hwid) {
+        return res.status(400).json({ error: 'HWID not set for token' });
     }
-    
-    const key = generateKey(hwid);
+
+    const key = generateKey(tokenData.hwid);
     delete tokens[token];
-    
-    res.json({ 
+
+    res.json({
         key: key,
-        hwid: hwid,
+        hwid: tokenData.hwid,
         expires: Math.floor(getNextSunday().getTime() / 1000),
         week: getCurrentWeek()
     });
