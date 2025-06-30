@@ -39,17 +39,17 @@ app.get('/', (req, res) => {
 
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
+    const hwid = req.query.hwid || null;
 
     tokens[token] = {
         expires: Date.now() + 300000,
-        hwid: null
+        hwid: hwid
     };
 
-    if (req.query.json === "1") {
-        return res.json({ token: token });
-    }
+    let url = `/key.html?token=${token}`;
+    if (hwid) url += `&hwid=${hwid}`;
 
-    res.redirect(`/key.html?token=${token}`);
+    res.redirect(url);
 });
 
 app.get('/sethwid', (req, res) => {
