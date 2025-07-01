@@ -66,22 +66,24 @@ app.get('/sethwid', (req, res) => {
 
 app.get('/getkey', (req, res) => {
     const token = req.query.token;
+    const hwid = req.query.hwid;
+
     const tokenData = tokens[token];
 
-    if (!token || !tokenData || Date.now() > tokenData.expires) {
+    if (!tokenData || Date.now() > tokenData.expires) {
         return res.status(400).json({ error: 'Invalid or expired token' });
     }
 
-    if (!tokenData.hwid) {
-        return res.status(400).json({ error: 'HWID not set for token' });
+    if (!hwid) {
+        return res.status(400).json({ error: 'HWID required' });
     }
 
-    const key = generateKey(tokenData.hwid);
+    const key = generateKey(hwid);
     delete tokens[token];
 
-    res.json({
+    res.json({ 
         key: key,
-        hwid: tokenData.hwid,
+        hwid: hwid,
         expires: Math.floor(getNextSunday().getTime() / 1000),
         week: getCurrentWeek()
     });
