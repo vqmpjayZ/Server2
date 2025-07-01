@@ -39,15 +39,19 @@ app.get('/', (req, res) => {
 
 app.get('/generate', (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
-    const hwid = req.query.hwid || null;
+    const hwid = req.query.hwid;
 
     tokens[token] = {
         expires: Date.now() + 300000,
-        hwid: hwid
+        hwid: hwid || null
     };
 
     let url = `/key.html?token=${token}`;
     if (hwid) url += `&hwid=${hwid}`;
+
+    if (req.query.json === "1") {
+        return res.json({ token, hwid });
+    }
 
     res.redirect(url);
 });
