@@ -49,10 +49,6 @@ app.get('/generate', (req, res) => {
     let url = `/key.html?token=${token}`;
     if (hwid) url += `&hwid=${hwid}`;
 
-    if (req.query.json === "1") {
-        return res.json({ token, hwid });
-    }
-
     res.redirect(url);
 });
 
